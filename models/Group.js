@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 
 const groupSchema = new mongoose.Schema({
     name: { type: String, required: true },
-    course: { type: Number, required: true },
+    course: { type: mongoose.Schema.Types.ObjectId, ref: "Course", required: true },
     specialty: { type: mongoose.Schema.Types.ObjectId, ref: 'Specialty', required: true }
 });
 
