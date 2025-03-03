@@ -13,6 +13,7 @@ const Course = require("./models/Course");
 const courseRoutes = require("./routes/courseRoutes");
 const Schedule = require("./models/Schedule"); 
 const usersRoutes = require("./routes/usersRoutes");
+const authMiddleware = require("./middleware/auth");
 
 const app = express();
 app.use(express.json());
@@ -58,6 +59,8 @@ app.get("/schedule/:groupId", async (req, res) => {
 });
 
 
+
+app.use("/api/rooms", authMiddleware, require("./routes/roomsRoutes"));
 app.use("/users", usersRoutes)
 app.use('/schedule', scheduleRoutes);
 app.use('/groups', groupRoutes);
