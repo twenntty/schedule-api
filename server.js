@@ -14,6 +14,8 @@ const courseRoutes = require("./routes/courseRoutes");
 const Schedule = require("./models/Schedule"); 
 const usersRoutes = require("./routes/usersRoutes");
 const authMiddleware = require("./middleware/auth");
+const weekDaysRoutes = require("./routes/weekDays");
+const requestRoutes = require("./routes/requestRoutes");
 
 const app = express();
 app.use(express.json());
@@ -50,7 +52,9 @@ app.get("/schedule/:groupId", async (req, res) => {
         const schedule = await Schedule.find({ group: req.params.groupId })
             .populate("group") // Подтягиваем инфо о группе
             .populate("period") // Подтягиваем время
-            .populate("teacher"); // Подтягиваем преподавателя
+            .populate("teacher")
+            .populate("room", "name")  // Подтягиваем информацию о кабинете (только имя)
+            .populate("dayOfWeek"); // Подтягиваем преподавателя
 
         res.json(schedule);
     } catch (error) {
@@ -62,12 +66,14 @@ app.get("/schedule/:groupId", async (req, res) => {
 
 app.use("/api/rooms", authMiddleware, require("./routes/roomsRoutes"));
 app.use("/users", usersRoutes)
-app.use('/schedule', scheduleRoutes);
-app.use('/groups', groupRoutes);
+app.use('/api/schedule', scheduleRoutes);
+app.use('/api/groups', groupRoutes);
 app.use('/specialties', specialtyRoutes);
-app.use('/periods', periodRoutes);
+app.use('/api/periods', periodRoutes);
 app.use('/auth', authRoutes);
 app.use("/courses", courseRoutes);
+app.use("/api/weekdays", weekDaysRoutes);
+app.use("/api/requests", requestRoutes);
 
 // Подключение к базе данных
 connectDB();
