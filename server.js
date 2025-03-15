@@ -14,8 +14,9 @@ const courseRoutes = require("./routes/courseRoutes");
 const Schedule = require("./models/Schedule"); 
 const usersRoutes = require("./routes/usersRoutes");
 const authMiddleware = require("./middleware/auth");
-const weekDaysRoutes = require("./routes/weekDays");
+const weekdayRoute = require('./routes/weekDays');
 const requestRoutes = require("./routes/requestRoutes");
+const teacherRoutes = require('./routes/teacherRoutes');
 
 const app = express();
 app.use(express.json());
@@ -72,8 +73,9 @@ app.use('/specialties', specialtyRoutes);
 app.use('/api/periods', periodRoutes);
 app.use('/auth', authRoutes);
 app.use("/courses", courseRoutes);
-app.use("/api/weekdays", weekDaysRoutes);
+app.use('/api', weekdayRoute);
 app.use("/api/requests", requestRoutes);
+app.use('/teachers', teacherRoutes);
 
 // Подключение к базе данных
 connectDB();
