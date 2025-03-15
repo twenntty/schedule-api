@@ -8,7 +8,7 @@ const teacherSchema = new Schema({
 
 // Виртуальное поле для fullName, которое будет объединять firstName, lastName и middleName
 teacherSchema.virtual('fullName').get(function() {
-  return `${this.firstName} ${this.lastName} ${this.middleName}`;
+  return `${this.lastName} ${this.firstName} ${this.middleName}`;
 });
 
 // Это нужно, чтобы виртуальные поля работали при сериализации в JSON
