@@ -52,13 +52,15 @@ router.get('/group/:groupId/day/:dayOfWeek', async (req, res) => {
 
 router.get('/teacher/:teacherId', async (req, res) => {
     try {
-        const { teacherId } = req.params;
-        const schedules = await Schedule.find({ teacher: teacherId }).populate(populateFields);
-        res.json(schedules);
+      const { teacherId } = req.params;
+      const schedules = await Schedule.find({ teacher: teacherId })
+        .populate(populateFields);
+      
+      res.json(schedules);
     } catch (error) {
-        res.status(500).json({ message: "Ошибка сервера", error: error.message });
+      res.status(500).json({ message: "Ошибка сервера", error: error.message });
     }
-});
+  });
 
 // ➜ Добавить новую запись в расписание
 router.post('/', async (req, res) => {

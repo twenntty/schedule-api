@@ -6,7 +6,7 @@ const scheduleSchema = new mongoose.Schema({
     period: { type: mongoose.Schema.Types.ObjectId, ref: 'Period', required: true }, // Связь с временем пары
     lessonType: {
         type: String,
-        enum: ['Практика', 'Лекция', 'Лабораторная', 'Экзамен', 'Учебная практика', 'Выездная практика'],
+        enum: ['Практика', 'Лекція', 'Лабораторна', 'Іспит', 'Навчальна практика', 'Виїзна практика'],
         required: true
     },
     group: { type: mongoose.Schema.Types.ObjectId, ref: 'Group', required: true }, // Связь с группой
