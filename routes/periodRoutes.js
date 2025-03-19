@@ -8,7 +8,7 @@ router.get('/', async (req, res) => {
         const periods = await Period.find();
         res.json(periods);
     } catch (error) {
-        res.status(500).json({ message: 'Помилка загрузки', error: error.message });
+        res.status(500).json({ message: 'помилка загрузки', error: error.message });
     }
 });
 

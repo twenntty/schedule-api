@@ -9,7 +9,7 @@ router.get("/", async (req, res) => {
         const courses = await Course.find();
         res.json(courses);
     } catch (error) {
-        res.status(500).json({ message: "Ошибка сервера", error: error.message });
+        res.status(500).json({ message: "Помилка сервера", error: error.message });
     }
 });
 
@@ -19,7 +19,7 @@ router.get("/:specialtyId", async (req, res) => {
         const courses = await Course.find({ specialty: req.params.specialtyId });
         res.json(courses);
     } catch (error) {
-        res.status(500).json({ message: "Ошибка сервера", error: error.message });
+        res.status(500).json({ message: "Помилка сервера", error: error.message });
     }
 });
 
@@ -31,7 +31,7 @@ router.post("/", async (req, res) => {
         await newCourse.save();
         res.status(201).json(newCourse);
     } catch (error) {
-        res.status(500).json({ message: "Ошибка при создании курса", error: error.message });
+        res.status(500).json({ message: "Помилка при створенні курсу", error: error.message });
     }
 });
 
@@ -39,11 +39,11 @@ router.delete("/:id", async (req, res) => {
     try {
         const result = await Course.findByIdAndDelete(req.params.id);
         if (!result) {
-            return res.status(404).json({ message: "Курс не найден" });
+            return res.status(404).json({ message: "Курс не знайдено" });
         }
-        res.status(200).json({ message: "Курс удален" });
+        res.status(200).json({ message: "Курс видалений" });
     } catch (error) {
-        res.status(500).json({ message: "Ошибка при удалении курса", error: error.message });
+        res.status(500).json({ message: "Помилка при видалені курсу", error: error.message });
     }
 });
 

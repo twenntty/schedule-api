@@ -2,7 +2,6 @@ const express = require("express");
 const moment = require("moment");
 const router = express.Router();
 
-// Локальная база данных, где дни недели сопоставляются с их ID
 const weekDaysDb = {
   "Monday": "1", // Понеділок
   "Tuesday": "2", // Вівторок
@@ -13,29 +12,25 @@ const weekDaysDb = {
   "Sunday": "7" // Неділя
 };
 
-// API для получения дня недели по дате
 router.get("/weekday", (req, res) => {
   const { date } = req.query;
 
   if (!date) {
-    return res.status(400).json({ error: "Не указана дата." });
+    return res.status(400).json({ error: "Невказана дата." });
   }
 
   try {
-    // Преобразуем строку в дату и получаем день недели на английском
-    const dayOfWeek = moment(date).format('dddd'); // Пример: "Monday"
+    const dayOfWeek = moment(date).format('dddd');
     
-    // Получаем ID дня недели из базы
     const weekDayId = weekDaysDb[dayOfWeek];
 
-    // Если ID найден, отправляем его, иначе возвращаем ошибку
     if (weekDayId) {
-      res.json({ weekDayId, dayOfWeek }); // Отправляем ID и день недели
+      res.json({ weekDayId, dayOfWeek }); 
     } else {
-      res.status(500).json({ error: "Не удалось найти ID для дня недели." });
+      res.status(500).json({ error: "Не вдалося знайти день неділі по ID" });
     }
   } catch (err) {
-    res.status(500).json({ error: "Ошибка обработки даты." });
+    res.status(500).json({ error: "помилка обробки дати." });
   }
 });
 

@@ -4,61 +4,60 @@ const bcrypt = require('bcryptjs');
 const userSchema = new mongoose.Schema({
     firstName: { 
         type: String, 
-        required: [true, 'Имя обязательно для заполнения'] 
+        required: [true, "Ім'я обов'язкове для заповнення"] 
     },
     lastName: { 
         type: String, 
-        required: [true, 'Фамилия обязательна для заполнения'] 
+        required: [true, "Прізвище обов'язкове для заповнення"] 
     },
     patronymic: { 
         type: String, 
-        required: false // Необязательное поле
+        required: false 
     },
     position: { 
         type: String, 
-        required: [true, 'Должность обязательна для заполнения'] 
+        required: [true, "Посада обов'язкова для заповнення"] 
     },
     educationalInstitution: {
         type: String,
-        required: [true, 'Учебное заведение обязательно для заполнения']
+        required: [true, "Навчальний заклад обов'язковий для заповнення"]
     },
     phoneNumber: {
         type: String,
-        required: [true, 'Номер телефона обязателен'],
+        required: [true, "Номер телефону обов'язковий"],
         unique: true,
         validate: {
             validator: function(v) {
-                return /^\+?[1-9]\d{1,14}$/.test(v); // Валидация международного формата
+                return /^\+?[1-9]\d{1,14}$/.test(v);
             },
-            message: props => `${props.value} не является валидным номером телефона!`
+            message: props => `${props.value} не є валідним номером телефону!`
         }
     },
     email: { 
         type: String, 
-        required: [true, 'Email обязателен'], 
+        required: [true, "Електронна пошта обов'язкова"], 
         unique: true,
         validate: {
             validator: function(v) {
                 return /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/.test(v);
             },
-            message: props => `${props.value} не является валидным email!`
+            message: props => `${props.value} не є валідною електронною поштою!`
         }
     },
     password: { 
         type: String, 
-        required: [true, 'Пароль обязателен'] 
+        required: [true, "Пароль обов'язковий"] 
     },
     role: {
         type: String,
         enum: {
             values: ['admin', 'institution', 'user'],
-            message: 'Недопустимая роль пользователя'
+            message: 'Неприпустима роль користувача'
         },
-        required: [true, 'Роль обязательна для заполнения']
+        required: [true, "Роль обов'язкова для заповнення"]
     }
 });
 
-// Хеширование пароля перед сохранением
 userSchema.pre('save', async function (next) {
     if (!this.isModified('password')) return next();
     

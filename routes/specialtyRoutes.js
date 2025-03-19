@@ -10,7 +10,7 @@ router.get('/', async (req, res) => {
 router.post('/', async (req, res) => {
     const newSpecialty = new Specialty(req.body);
     await newSpecialty.save();
-    res.json({ message: 'Специальность добавлена', specialty: newSpecialty });
+    res.json({ message: 'Спеціальність додано', specialty: newSpecialty });
 });
 
 module.exports = router;

@@ -24,7 +24,7 @@ router.get('/', async (req, res) => {
         const schedules = await Schedule.find().populate(populateFields);
         res.json(schedules);
     } catch (error) {
-        res.status(500).json({ message: "Ошибка сервера", error: error.message });
+        res.status(500).json({ message: "Помилка сервера", error: error.message });
     }
 });
 
@@ -35,7 +35,7 @@ router.get('/group/:groupId', async (req, res) => {
         const schedules = await Schedule.find({ group: groupId }).populate(populateFields);
         res.json(schedules);
     } catch (error) {
-        res.status(500).json({ message: "Ошибка сервера", error: error.message });
+        res.status(500).json({ message: "Помилка сервера", error: error.message });
     }
 });
 
@@ -46,7 +46,7 @@ router.get('/group/:groupId/day/:dayOfWeek', async (req, res) => {
         const schedules = await Schedule.find({ group: groupId, dayOfWeek }).populate(populateFields);
         res.json(schedules);
     } catch (error) {
-        res.status(500).json({ message: "Ошибка сервера", error: error.message });
+        res.status(500).json({ message: "Помилка сервера", error: error.message });
     }
 });
 
@@ -58,7 +58,7 @@ router.get('/teacher/:teacherId', async (req, res) => {
       
       res.json(schedules);
     } catch (error) {
-      res.status(500).json({ message: "Ошибка сервера", error: error.message });
+      res.status(500).json({ message: "Помилка сервера", error: error.message });
     }
   });
 
@@ -69,14 +69,14 @@ router.post('/', async (req, res) => {
 
         // Проверяем, что все обязательные поля присутствуют
         if (!subject || !teacher || !lessonType || !period || !group || !room || !dayOfWeek || !date || !course || !specialty) {
-            return res.status(400).json({ message: "Пожалуйста, заполните все поля!" });
+            return res.status(400).json({ message: "Будь ласка заповніть всі поля!" });
         }
 
         // Проверка на валидность ObjectId
         const idsToCheck = { period, group, room, teacher, course, specialty };
         for (const [key, value] of Object.entries(idsToCheck)) {
             if (!mongoose.Types.ObjectId.isValid(value)) {
-                return res.status(400).json({ message: `Некорректный идентификатор для ${key}` });
+                return res.status(400).json({ message: `Неправильний ідентифікатор для ${key}` });
             }
         }
 
@@ -91,20 +91,20 @@ router.post('/', async (req, res) => {
         ]);
 
         if (existingDocuments.some(doc => !doc)) {
-            return res.status(400).json({ message: "Один или несколько документов не найдены" });
+            return res.status(400).json({ message: "Один або декілька документів не знайдено" });
         }
 
         const newSchedule = new Schedule({ subject, teacher, lessonType, period, group, room, dayOfWeek, date, course, specialty });
 
         await newSchedule.save();
-        res.json({ message: 'Запись добавлена', schedule: newSchedule });
+        res.json({ message: 'Запис доданий', schedule: newSchedule });
     } catch (error) {
-        console.error("Ошибка при добавлении пары:", {
+        console.error("Помилка при добавлені пари:", {
             message: error.message,
             stack: error.stack,
             body: req.body,
         });
-        res.status(500).json({ message: "Ошибка сервера", error: error.message });
+        res.status(500).json({ message: "Помилка серверу", error: error.message });
     }
 });
 
@@ -116,14 +116,14 @@ router.put('/:scheduleId', async (req, res) => {
 
         // Проверяем, что все обязательные поля присутствуют
         if (!subject || !teacher || !lessonType || !period || !group || !room || !dayOfWeek || !date || !course || !specialty) {
-            return res.status(400).json({ message: "Пожалуйста, заполните все поля!" });
+            return res.status(400).json({ message: "Будь ласка заповніть всі поля!" });
         }
 
         // Проверка на валидность ObjectId
         const idsToCheck = { period, group, room, teacher, course, specialty };
         for (const [key, value] of Object.entries(idsToCheck)) {
             if (!mongoose.Types.ObjectId.isValid(value)) {
-                return res.status(400).json({ message: `Некорректный идентификатор для ${key}` });
+                return res.status(400).json({ message: `Неправильний ідентифікатор для ${key}` });
             }
         }
 
@@ -138,7 +138,7 @@ router.put('/:scheduleId', async (req, res) => {
         ]);
 
         if (existingDocuments.some(doc => !doc)) {
-            return res.status(400).json({ message: "Один или несколько документов не найдены" });
+            return res.status(400).json({ message: "Один або декілька документів не знайдено" });
         }
 
         // Обновляем расписание
@@ -149,17 +149,17 @@ router.put('/:scheduleId', async (req, res) => {
         ).populate(populateFields);
 
         if (!updatedSchedule) {
-            return res.status(404).json({ message: "Запись расписания не найдена" });
+            return res.status(404).json({ message: "Запис розкладу не знайдено" });
         }
 
-        res.json({ message: "Запись обновлена", schedule: updatedSchedule });
+        res.json({ message: "Пару оновлено", schedule: updatedSchedule });
     } catch (error) {
-        console.error("Ошибка при редактировании пары:", {
+        console.error("Помилка при редагуванні пари:", {
             message: error.message,
             stack: error.stack,
             body: req.body,
         });
-        res.status(500).json({ message: "Ошибка сервера", error: error.message });
+        res.status(500).json({ message: "Помилка серверу", error: error.message });
     }
 });
 
@@ -172,16 +172,16 @@ router.delete('/:scheduleId', async (req, res) => {
         const deletedSchedule = await Schedule.findByIdAndDelete(scheduleId);
 
         if (!deletedSchedule) {
-            return res.status(404).json({ message: "Запись расписания не найдена" });
+            return res.status(404).json({ message: "Запис розкалду не знайдено" });
         }
 
-        res.json({ message: "Запись удалена" });
+        res.json({ message: "Запис видалено" });
     } catch (error) {
-        console.error("Ошибка при удалении пары:", {
+        console.error("Помилка при видалені пари:", {
             message: error.message,
             stack: error.stack,
         });
-        res.status(500).json({ message: "Ошибка сервера", error: error.message });
+        res.status(500).json({ message: "Помилка серверу", error: error.message });
     }
 });
 

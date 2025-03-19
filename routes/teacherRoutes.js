@@ -1,38 +1,35 @@
 const express = require('express');
-const Teacher = require('../models/Teacher'); // Подключаем модель преподавателя
+const Teacher = require('../models/Teacher');
 const router = express.Router();
 
-// ➜ Получить всех преподавателей
 router.get('/', async (req, res) => {
   try {
-    const teachers = await Teacher.find(); // Извлекаем всех преподавателей
-    res.status(200).json(teachers); // Отправляем список преподавателей
+    const teachers = await Teacher.find();
+    res.status(200).json(teachers);
   } catch (err) {
-    res.status(500).json({ error: err.message }); // Ошибка на сервере
+    res.status(500).json({ error: err.message });
   }
 });
 
-// ➜ Создать нового преподавателя
 router.post('/', async (req, res) => {
   try {
-    const teacher = new Teacher(req.body); // Создаем нового преподавателя из данных тела запроса
-    await teacher.save(); // Сохраняем нового преподавателя в базе данных
-    res.status(201).json(teacher); // Отправляем созданного преподавателя в ответ
+    const teacher = new Teacher(req.body);
+    await teacher.save(); 
+    res.status(201).json(teacher);
   } catch (err) {
-    res.status(400).json({ error: err.message }); // Ошибка при создании преподавателя
+    res.status(400).json({ error: err.message });
   }
 });
 
-// ➜ Удалить преподавателя по ID
 router.delete('/:id', async (req, res) => {
   try {
-    const result = await Teacher.findByIdAndDelete(req.params.id); // Находим и удаляем преподавателя по ID
+    const result = await Teacher.findByIdAndDelete(req.params.id);
     if (!result) {
-      return res.status(404).json({ message: 'Викладача не знайдено' }); // Если преподаватель не найден
+      return res.status(404).json({ message: 'Викладача не знайдено' }); 
     }
-    res.status(200).json({ message: 'Викладач видалений' }); // Подтверждение об удалении
+    res.status(200).json({ message: 'Викладач видалений' }); 
   } catch (err) {
-    res.status(500).json({ error: err.message }); // Ошибка на сервере
+    res.status(500).json({ error: err.message }); 
   }
 });
 

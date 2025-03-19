@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 
 const RoomSchema = new mongoose.Schema({
-  name: { type: String, required: true }, // Номер кабинета, например "507"
+  name: { type: String, required: true },
 });
 
 RoomSchema.pre("save", function (next) {
