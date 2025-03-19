@@ -108,4 +108,82 @@ router.post('/', async (req, res) => {
     }
 });
 
+// ➜ Редактировать запись в расписании
+router.put('/:scheduleId', async (req, res) => {
+    try {
+        const { scheduleId } = req.params;
+        const { subject, teacher, lessonType, period, group, room, dayOfWeek, date, course, specialty } = req.body;
+
+        // Проверяем, что все обязательные поля присутствуют
+        if (!subject || !teacher || !lessonType || !period || !group || !room || !dayOfWeek || !date || !course || !specialty) {
+            return res.status(400).json({ message: "Пожалуйста, заполните все поля!" });
+        }
+
+        // Проверка на валидность ObjectId
+        const idsToCheck = { period, group, room, teacher, course, specialty };
+        for (const [key, value] of Object.entries(idsToCheck)) {
+            if (!mongoose.Types.ObjectId.isValid(value)) {
+                return res.status(400).json({ message: `Некорректный идентификатор для ${key}` });
+            }
+        }
+
+        // Проверка существования документов
+        const existingDocuments = await Promise.all([
+            Group.findById(group),
+            Teacher.findById(teacher),
+            Period.findById(period),
+            Room.findById(room),
+            Course.findById(course),
+            Specialty.findById(specialty),
+        ]);
+
+        if (existingDocuments.some(doc => !doc)) {
+            return res.status(400).json({ message: "Один или несколько документов не найдены" });
+        }
+
+        // Обновляем расписание
+        const updatedSchedule = await Schedule.findByIdAndUpdate(
+            scheduleId,
+            { subject, teacher, lessonType, period, group, room, dayOfWeek, date, course, specialty },
+            { new: true } // Возвращает обновленный документ
+        ).populate(populateFields);
+
+        if (!updatedSchedule) {
+            return res.status(404).json({ message: "Запись расписания не найдена" });
+        }
+
+        res.json({ message: "Запись обновлена", schedule: updatedSchedule });
+    } catch (error) {
+        console.error("Ошибка при редактировании пары:", {
+            message: error.message,
+            stack: error.stack,
+            body: req.body,
+        });
+        res.status(500).json({ message: "Ошибка сервера", error: error.message });
+    }
+});
+
+// ➜ Удалить запись из расписания
+router.delete('/:scheduleId', async (req, res) => {
+    try {
+        const { scheduleId } = req.params;
+
+        // Удаляем расписание
+        const deletedSchedule = await Schedule.findByIdAndDelete(scheduleId);
+
+        if (!deletedSchedule) {
+            return res.status(404).json({ message: "Запись расписания не найдена" });
+        }
+
+        res.json({ message: "Запись удалена" });
+    } catch (error) {
+        console.error("Ошибка при удалении пары:", {
+            message: error.message,
+            stack: error.stack,
+        });
+        res.status(500).json({ message: "Ошибка сервера", error: error.message });
+    }
+});
+
+
 module.exports = router;
