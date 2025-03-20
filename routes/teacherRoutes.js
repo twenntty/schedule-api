@@ -1,5 +1,6 @@
 const express = require('express');
 const Teacher = require('../models/Teacher');
+const Schedule = require('../models/Schedule');
 const router = express.Router();
 
 router.get('/', async (req, res) => {
@@ -30,6 +31,36 @@ router.delete('/:id', async (req, res) => {
     res.status(200).json({ message: 'Викладач видалений' }); 
   } catch (err) {
     res.status(500).json({ error: err.message }); 
+  }
+});
+
+router.get('/with-hours', async (req, res) => {
+  try {
+    const teachersWithHours = await Teacher.aggregate([
+      {
+        $lookup: {
+          from: "schedules",
+          localField: "_id",
+          foreignField: "teacher",
+          as: "schedules"
+        }
+      },
+      {
+        $addFields: {
+          hours: { $size: "$schedules" }
+        }
+      },
+      {
+        $project: {
+          schedules: 0
+        }
+      }
+    ]);
+
+    res.json(teachersWithHours);
+  } catch (error) {
+    console.error('Ошибка агрегации:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
   }
 });
 
