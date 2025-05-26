@@ -68,14 +68,14 @@ app.get("/schedule/:groupId", async (req, res) => {
 app.use("/api/rooms", authMiddleware, require("./routes/roomsRoutes"));
 app.use("/users",authMiddleware, usersRoutes)
 app.use('/api/schedule', scheduleRoutes);
-app.use('/api/groups', authMiddleware, groupRoutes);
-app.use('/specialties', authMiddleware, specialtyRoutes);
+app.use('/api/groups', groupRoutes);
+app.use('/specialties', specialtyRoutes);
 app.use('/api/periods', authMiddleware, periodRoutes);
 app.use('/auth', authRoutes);
-app.use("/courses", authMiddleware, courseRoutes);
+app.use("/courses", courseRoutes);
 app.use('/api', weekdayRoute);
 app.use("/api/requests", authMiddleware, requestRoutes);
-app.use('/teachers', authMiddleware, teacherRoutes);
+app.use('/teachers', teacherRoutes);
 
 connectDB();
 
