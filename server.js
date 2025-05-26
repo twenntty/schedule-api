@@ -34,53 +34,52 @@ app.get("/courses/:specialtyId", async (req, res) => {
         const courses = await Course.find({ specialty: req.params.specialtyId });
         res.json(courses);
     } catch (error) {
-        res.status(500).json({ message: "Ошибка сервера", error: error.message });
+        res.status(500).json({ message: "Помилка сервера", error: error.message });
     }
 });
 
 app.get("/groups/:courseId", async (req, res) => {
     try {
-        const courseId = new mongoose.Types.ObjectId(req.params.courseId); // Приводим к ObjectId
+        const courseId = new mongoose.Types.ObjectId(req.params.courseId); 
         const groups = await Group.find({ course: courseId }).populate("specialty course");
         res.json(groups);
     } catch (error) {
-        res.status(500).json({ message: "Ошибка сервера", error: error.message });
+        res.status(500).json({ message: "Помилка сервера", error: error.message });
     }
 });
 
 app.get("/schedule/:groupId", async (req, res) => {
     try {
         const schedule = await Schedule.find({ group: req.params.groupId })
-            .populate("group") // Подтягиваем инфо о группе
-            .populate("period") // Подтягиваем время
+            .populate("group") 
+            .populate("period")
             .populate("teacher")
-            .populate("room", "name")  // Подтягиваем информацию о кабинете (только имя)
-            .populate("dayOfWeek"); // Подтягиваем преподавателя
+            .populate("room", "name") 
+            .populate("dayOfWeek");
 
         res.json(schedule);
     } catch (error) {
-        res.status(500).json({ message: "Ошибка сервера", error: error.message });
+        res.status(500).json({ message: "Помилка сервера", error: error.message });
     }
 });
 
 
 
 app.use("/api/rooms", authMiddleware, require("./routes/roomsRoutes"));
-app.use("/users", usersRoutes)
+app.use("/users",authMiddleware, usersRoutes)
 app.use('/api/schedule', scheduleRoutes);
-app.use('/api/groups', groupRoutes);
-app.use('/specialties', specialtyRoutes);
-app.use('/api/periods', periodRoutes);
+app.use('/api/groups', authMiddleware, groupRoutes);
+app.use('/specialties', authMiddleware, specialtyRoutes);
+app.use('/api/periods', authMiddleware, periodRoutes);
 app.use('/auth', authRoutes);
-app.use("/courses", courseRoutes);
+app.use("/courses", authMiddleware, courseRoutes);
 app.use('/api', weekdayRoute);
-app.use("/api/requests", requestRoutes);
-app.use('/teachers', teacherRoutes);
+app.use("/api/requests", authMiddleware, requestRoutes);
+app.use('/teachers', authMiddleware, teacherRoutes);
 
-// Подключение к базе данных
 connectDB();
 
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, "0.0.0.0", () => {
-    console.log(`Сервер запущен на порту ${PORT}`);
+    console.log(`Сервер відкрито на порту: ${PORT}`);
 });

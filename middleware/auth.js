@@ -1,17 +1,17 @@
 const jwt = require("jsonwebtoken");
 
 module.exports = (req, res, next) => {
-  const token = req.header("Authorization")?.split(" ")[1]; // Берём токен из заголовка
+  const token = req.header("Authorization")?.split(" ")[1]; 
 
   if (!token) {
-    return res.status(401).json({ message: "Нет токена, доступ запрещен" });
+    return res.status(401).json({ message: "Токена не існує, доступ заборонено" });
   }
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET); // Проверяем токен
-    req.user = decoded; // Добавляем пользователя в req.user
-    next(); // Передаём управление следующему middleware
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    req.user = decoded; 
+    next(); 
   } catch (error) {
-    res.status(403).json({ message: "Токен недействителен" });
+    res.status(403).json({ message: "Токен не дійсний" });
   }
 };

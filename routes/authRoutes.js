@@ -75,7 +75,6 @@ router.post('/register', [
             { expiresIn: '7d' }
         );
 
-        // Убираем пароль из ответа
         const userData = user.toObject();
         delete userData.password;
 
