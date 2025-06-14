@@ -73,7 +73,7 @@ router.get('/group/:groupId/export-week.ics', async (req, res) => {
         end: endTime.toDate(),
         summary: `${item.lessonType}: ${item.subject}`,
         description: `Викладач: ${item.teacher.fullName}`,
-        location: item.room.name
+        location: item.room ? item.room.name : 'Кабінет не вказаний'
       });
     });
 
