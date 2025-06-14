@@ -157,6 +157,12 @@ router.get('/group/:groupId/export-week.xlsx', async (req, res) => {
 
     worksheet.addRow([]);
     worksheet.addRow([]);
+        worksheet.addRow([]);
+    worksheet.addRow([]);
+        worksheet.addRow([]);
+    worksheet.addRow([]);
+        worksheet.addRow([]);
+    worksheet.addRow([]);
 
     const daysOfWeek = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Нд'];
     const headerRowData = ['Пара / День'];
