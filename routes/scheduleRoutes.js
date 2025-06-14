@@ -8,6 +8,8 @@ const Room = require('../models/Room');
 const Course = require('../models/Course');
 const Specialty = require('../models/Specialty');
 const router = express.Router();
+const ical = require('ical-generator').default;
+const moment = require('moment');
 
 const populateFields = [
     { path: 'group', populate: { path: 'specialty' } },
@@ -52,7 +54,7 @@ router.get('/group/:groupId/export-week.ics', async (req, res) => {
     })
     .populate(populateFields);
 
-    const cal = ical({ name: `Розклад групи ${groupId} (${monday.format('DD.MM')}–${sunday.format('DD.MM')})`, timezone: 'Europe/Kyiv' });
+    const cal = ical({ name: `ScheduleGroup ${groupId} (${monday.format('DD.MM')}–${sunday.format('DD.MM')})`, timezone: 'Europe/Kyiv' });
 
     schedules.forEach(item => {
       const startTime = moment(item.date).set({
@@ -75,8 +77,9 @@ router.get('/group/:groupId/export-week.ics', async (req, res) => {
       });
     });
 
-    res.setHeader('Content-Disposition', `attachment; filename="schedule_${groupId}_${monday.format('YYYYMMDD')}.ics"`);
-    cal.serve(res);
+        res.setHeader('Content-Disposition', `attachment; filename="schedule_${groupId}_${monday.format('YYYYMMDD')}.ics"`);
+        res.setHeader('Content-Type', 'text/calendar');
+        return res.send(cal.toString());
 
   } catch (err) {
     console.error(err);

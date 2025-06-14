@@ -17,8 +17,7 @@ const authMiddleware = require("./middleware/auth");
 const weekdayRoute = require('./routes/weekDays');
 const requestRoutes = require("./routes/requestRoutes");
 const teacherRoutes = require('./routes/teacherRoutes');
-const ical = require('ical-generator');
-const moment = require('moment');
+
 
 const app = express();
 app.use(express.json());
