@@ -50,51 +50,6 @@ app.get("/groups/:courseId", async (req, res) => {
     }
 });
 
-router.get('/group/:groupId/export-week.ics', async (req, res) => {
-  try {
-    const { groupId } = req.params;
-
-    const monday = moment().startOf('isoWeek');
-    const sunday = moment().endOf('isoWeek'); 
-
-    const schedules = await Schedule.find({
-      group: groupId,
-      date: { $gte: monday.toDate(), $lte: sunday.toDate() }
-    })
-    .populate(populateFields);
-
-    const cal = ical({ name: `Розклад групи ${groupId} (${monday.format('DD.MM')}–${sunday.format('DD.MM')})`, timezone: 'Europe/Kyiv' });
-
-    schedules.forEach(item => {
-      const startTime = moment(item.date).set({
-        hour: moment(item.period.startTime, 'HH:mm').hour(),
-        minute: moment(item.period.startTime, 'HH:mm').minute()
-      });
-
-      const endTime = moment(item.date).set({
-        hour: moment(item.period.endTime, 'HH:mm').hour(),
-        minute: moment(item.period.endTime, 'HH:mm').minute()
-      });
-
-      cal.createEvent({
-        id: item._id.toString(),
-        start: startTime.toDate(),
-        end: endTime.toDate(),
-        summary: `${item.lessonType}: ${item.subject}`,
-        description: `Викладач: ${item.teacher.fullName}`,
-        location: item.room.name
-      });
-    });
-
-    res.setHeader('Content-Disposition', `attachment; filename="schedule_${groupId}_${monday.format('YYYYMMDD')}.ics"`);
-    cal.serve(res);
-
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: 'Помилка генерації', error: err.message });
-  }
-});
-
 app.get("/schedule/:groupId", async (req, res) => {
     try {
         const schedule = await Schedule.find({ group: req.params.groupId })
