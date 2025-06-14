@@ -10,6 +10,7 @@ const Specialty = require('../models/Specialty');
 const router = express.Router();
 const ical = require('ical-generator').default;
 const moment = require('moment');
+const ExcelJS = require('exceljs');
 
 const populateFields = [
     { path: 'group', populate: { path: 'specialty' } },
@@ -109,6 +110,136 @@ router.get('/teacher/:teacherId', async (req, res) => {
       res.status(500).json({ message: "Помилка сервера", error: error.message });
     }
   });
+
+router.get('/group/:groupId/export-week.xlsx', async (req, res) => {
+  try {
+    const { groupId } = req.params;
+    const { weekStart } = req.query;
+
+    const monday = weekStart
+      ? moment.utc(weekStart, 'YYYY-MM-DD').startOf('isoWeek')
+      : moment.utc().startOf('isoWeek');
+    const sunday = moment.utc(monday).endOf('isoWeek');
+
+    const schedules = await Schedule.find({
+      group: groupId,
+      date: { $gte: monday.toDate(), $lte: sunday.toDate() }
+    }).populate([
+      { path: 'group', populate: { path: 'specialty' } },
+      { path: 'teacher' },
+      { path: 'period' },
+      { path: 'room' },
+      { path: 'course' }
+    ]);
+
+    if (!schedules.length) {
+      return res.status(404).json({ message: 'Розклад для цієї групи не знайдено.' });
+    }
+
+    const periods = await Period.find().sort({ startTime: 1 });
+
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet('Schedule');
+
+    try {
+      const imageId = workbook.addImage({
+        filename: './public/logo.png',
+        extension: 'png'
+      });
+
+      worksheet.addImage(imageId, {
+        tl: { col: 0.2, row: 0.2 },
+        ext: { width: 515, height: 122 }
+        });
+    } catch (e) {
+      console.warn('⚠️ Логотип не найден или не удалось вставить:', e.message);
+    }
+
+    worksheet.addRow([]);
+    worksheet.addRow([]);
+
+    const daysOfWeek = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Нд'];
+    const headerRowData = ['Пара / День'];
+    for (let i = 0; i < 7; i++) {
+      const date = moment(monday).add(i, 'days');
+      headerRowData.push(`${daysOfWeek[i]} ${date.format('DD.MM.YYYY')}`);
+    }
+    const tableHeaderRow = worksheet.addRow(headerRowData);
+
+    periods.forEach(period => {
+      const row = [`${period.name}\n${period.startTime}–${period.endTime}`];
+
+      for (let i = 0; i < 7; i++) {
+        const dateStr = moment(monday).add(i, 'days').format('YYYY-MM-DD');
+
+        const pair = schedules.find(s =>
+          moment(s.date).format('YYYY-MM-DD') === dateStr &&
+          s.period &&
+          s.period._id &&
+          s.period._id.equals(period._id)
+        );
+
+        if (pair) {
+          row.push(`${pair.subject} (${pair.lessonType})\n${pair.teacher?.fullName || ''}\n${pair.room?.name || ''}`);
+        } else {
+          row.push('');
+        }
+      }
+
+      worksheet.addRow(row);
+    });
+
+    worksheet.columns.forEach((col, i) => {
+      col.width = i === 0 ? 20 : 25;
+    });
+
+    worksheet.eachRow(row => {
+      row.height = 40;
+      row.alignment = { vertical: 'middle', wrapText: true };
+    });
+
+    tableHeaderRow.eachCell(cell => {
+      cell.fill = {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: 'DCE6F1' }
+      };
+      cell.font = { bold: true };
+      cell.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
+    });
+
+    for (let i = tableHeaderRow.number + 1; i <= worksheet.rowCount; i++) {
+      const cell = worksheet.getCell(`A${i}`);
+      cell.fill = {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: 'FCE4D6' }
+      };
+      cell.font = { bold: true };
+      cell.alignment = { vertical: 'middle', horizontal: 'left', wrapText: true };
+    }
+
+    worksheet.eachRow(row => {
+      row.eachCell(cell => {
+        cell.border = {
+          top: { style: 'thin' },
+          left: { style: 'thin' },
+          bottom: { style: 'thin' },
+          right: { style: 'thin' }
+        };
+      });
+    });
+
+    res.setHeader('Content-Disposition', `attachment; filename="schedule_week_${monday.format('YYYYMMDD')}.xlsx"`);
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    await workbook.xlsx.write(res);
+    res.end();
+
+  } catch (err) {
+    console.error('❌ Помилка генерації Excel:', err);
+    res.status(500).json({ message: 'Помилка генерації Excel', error: err.message });
+  }
+});
 
 // ➜ Добавить новую запись в расписание
 router.post('/', async (req, res) => {
