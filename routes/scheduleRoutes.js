@@ -46,8 +46,16 @@ router.get('/group/:groupId/export-week.ics', async (req, res) => {
   try {
     const { groupId } = req.params;
 
-    const monday = moment().startOf('isoWeek');
-    const sunday = moment().endOf('isoWeek'); 
+    const today = moment();
+    let monday, sunday;
+
+    if (today.isoWeekday() === 7) { // если сегодня воскресенье
+      monday = today.add(1, 'day').startOf('isoWeek'); // понедельник следующей недели
+      sunday = monday.clone().endOf('isoWeek');       // воскресенье следующей недели
+    } else {
+      monday = today.startOf('isoWeek');              // понедельник текущей недели
+      sunday = today.endOf('isoWeek');                 // воскресенье текущей недели
+    }
 
     const schedules = await Schedule.find({
       group: groupId,
@@ -78,9 +86,9 @@ router.get('/group/:groupId/export-week.ics', async (req, res) => {
       });
     });
 
-        res.setHeader('Content-Disposition', `attachment; filename="schedule_${groupId}_${monday.format('YYYYMMDD')}.ics"`);
-        res.setHeader('Content-Type', 'text/calendar');
-        return res.send(cal.toString());
+    res.setHeader('Content-Disposition', `attachment; filename="schedule_${groupId}_${monday.format('YYYYMMDD')}.ics"`);
+    res.setHeader('Content-Type', 'text/calendar');
+    return res.send(cal.toString());
 
   } catch (err) {
     console.error(err);
@@ -136,9 +144,21 @@ router.get('/group/:groupId/export-week.xlsx', async (req, res) => {
     const { groupId } = req.params;
     const { weekStart } = req.query;
 
-    const monday = weekStart
-      ? moment.utc(weekStart, 'YYYY-MM-DD').startOf('isoWeek')
-      : moment.utc().startOf('isoWeek');
+    let monday;
+
+    if (weekStart) {
+      // Если передан параметр weekStart, используем его
+      monday = moment.utc(weekStart, 'YYYY-MM-DD').startOf('isoWeek');
+    } else {
+      // Если сегодня воскресенье, берем следующую неделю, иначе текущую
+      const today = moment.utc();
+      if (today.isoWeekday() === 7) {
+        monday = today.add(1, 'day').startOf('isoWeek');
+      } else {
+        monday = today.startOf('isoWeek');
+      }
+    }
+
     const sunday = moment.utc(monday).endOf('isoWeek');
 
     const schedules = await Schedule.find({
@@ -170,18 +190,18 @@ router.get('/group/:groupId/export-week.xlsx', async (req, res) => {
       worksheet.addImage(imageId, {
         tl: { col: 0.2, row: 0.2 },
         ext: { width: 515, height: 122 }
-        });
+      });
     } catch (e) {
       console.warn('⚠️ Логотип не найден или не удалось вставить:', e.message);
     }
 
     worksheet.addRow([]);
     worksheet.addRow([]);
-        worksheet.addRow([]);
     worksheet.addRow([]);
-        worksheet.addRow([]);
     worksheet.addRow([]);
-        worksheet.addRow([]);
+    worksheet.addRow([]);
+    worksheet.addRow([]);
+    worksheet.addRow([]);
     worksheet.addRow([]);
 
     const daysOfWeek = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Нд'];
@@ -266,6 +286,7 @@ router.get('/group/:groupId/export-week.xlsx', async (req, res) => {
     res.status(500).json({ message: 'Помилка генерації Excel', error: err.message });
   }
 });
+
 
 // ➜ Добавить новую запись в расписание
 router.post('/', async (req, res) => {
