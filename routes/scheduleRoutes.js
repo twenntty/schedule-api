@@ -14,7 +14,7 @@ const ExcelJS = require('exceljs');
 
 const populateFields = [
     { path: 'group', populate: { path: 'specialty' } },
-    { path: 'teacher', select: 'name' },
+    { path: 'teacher' },
     { path: 'period', select: 'name startTime endTime' },
     { path: 'room', select: 'name' },
     { path: 'course', select: 'name' },
