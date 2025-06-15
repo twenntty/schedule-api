@@ -111,6 +111,26 @@ router.get('/teacher/:teacherId', async (req, res) => {
     }
   });
 
+  router.get('/group/:groupId/week', async (req, res) => {
+  try {
+    const { groupId } = req.params;
+    const today = moment();
+    const isSunday = today.isoWeekday() === 7;
+
+    const monday = isSunday ? today.add(1, 'day').startOf('isoWeek') : today.startOf('isoWeek');
+    const sunday = moment(monday).endOf('isoWeek');
+
+    const schedules = await Schedule.find({
+      group: groupId,
+      date: { $gte: monday.toDate(), $lte: sunday.toDate() }
+    }).populate(populateFields);
+
+    res.json(schedules);
+  } catch (error) {
+    res.status(500).json({ message: "Помилка сервера", error: error.message });
+  }
+});
+
 router.get('/group/:groupId/export-week.xlsx', async (req, res) => {
   try {
     const { groupId } = req.params;
