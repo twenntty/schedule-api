@@ -2,6 +2,25 @@ const express = require('express');
 const Group = require('../models/Group');
 const router = express.Router();
 
+
+const getGroupsCount = async (req, res) => {
+  try {
+    const count = await Group.countDocuments();
+    res.json({ count });
+  } catch (error) {
+    res.status(500).json({ error: 'Ошибка при подсчёте групп' });
+  }
+};
+
+router.get('/count', async (req, res) => {
+  try {
+    const count = await Group.countDocuments();
+    res.json({ count });
+  } catch (error) {
+    res.status(500).json({ message: 'Помилка сервера', error: error.message });
+  }
+});
+
 // Получить все группы с курсом и специальностью
 router.get('/', async (req, res) => {
     try {
@@ -22,6 +41,7 @@ router.post('/', async (req, res) => {
         res.status(500).json({ message: 'Помилка при створенні групи', error: error.message });
     }
 });
+
 
 // Удалить группу по ID
 router.delete('/:id', async (req, res) => {

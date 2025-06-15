@@ -36,18 +36,34 @@ router.delete('/:id', async (req, res) => {
 
 router.get('/with-hours', async (req, res) => {
   try {
-    const teachersWithHours = await Teacher.aggregate([
+    const now = new Date();
+    const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const firstDayOfNextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+
+    const teachersWithMonthlyHours = await Teacher.aggregate([
       {
         $lookup: {
           from: "schedules",
-          localField: "_id",
-          foreignField: "teacher",
+          let: { teacherId: "$_id" },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ["$teacher", "$$teacherId"] },
+                    { $gte: ["$date", firstDayOfMonth] },
+                    { $lt: ["$date", firstDayOfNextMonth] }
+                  ]
+                }
+              }
+            }
+          ],
           as: "schedules"
         }
       },
       {
         $addFields: {
-          hours: { $size: "$schedules" }
+          monthlyHours: { $size: "$schedules" }
         }
       },
       {
@@ -57,10 +73,10 @@ router.get('/with-hours', async (req, res) => {
       }
     ]);
 
-    res.json(teachersWithHours);
+    res.json(teachersWithMonthlyHours);
   } catch (error) {
     console.error('Ошибка агрегации:', error);
-    res.status(500).json({ error: 'Internal Server Error' });
+    res.status(500).json({ error: 'Помилка сервера', message: error.message });
   }
 });
 
