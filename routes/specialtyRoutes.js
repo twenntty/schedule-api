@@ -11,7 +11,11 @@ router.get('/', async (req, res) => {
 });
 
 router.post('/', canManage, async (req, res) => {
-    const newSpecialty = new Specialty(req.body);
+    const { name } = req.body;
+    if (!name || typeof name !== 'string' || !name.trim()) {
+        return res.status(400).json({ message: 'Вкажіть назву спеціальності' });
+    }
+    const newSpecialty = new Specialty({ name: name.trim() });
     await newSpecialty.save();
     res.json({ message: 'Спеціальність додано', specialty: newSpecialty });
 });

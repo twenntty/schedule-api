@@ -11,17 +11,21 @@ router.get('/', async (req, res) => {
     const teachers = await Teacher.find();
     res.status(200).json(teachers);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ message: "Помилка сервера" });
   }
 });
 
 router.post('/', canManage, async (req, res) => {
   try {
-    const teacher = new Teacher(req.body);
-    await teacher.save(); 
+    const { firstName, lastName, middleName } = req.body;
+    if (!firstName || !lastName || !middleName) {
+      return res.status(400).json({ error: 'Вкажіть прізвище, імʼя та по батькові' });
+    }
+    const teacher = new Teacher({ firstName, lastName, middleName });
+    await teacher.save();
     res.status(201).json(teacher);
   } catch (err) {
-    res.status(400).json({ error: err.message });
+    res.status(400).json({ message: "Помилка сервера" });
   }
 });
 
@@ -33,7 +37,7 @@ router.delete('/:id', canManage, async (req, res) => {
     }
     res.status(200).json({ message: 'Викладач видалений' }); 
   } catch (err) {
-    res.status(500).json({ error: err.message }); 
+    res.status(500).json({ message: "Помилка сервера" }); 
   }
 });
 
@@ -79,7 +83,7 @@ router.get('/with-hours', async (req, res) => {
     res.json(teachersWithMonthlyHours);
   } catch (error) {
     console.error('Ошибка агрегации:', error);
-    res.status(500).json({ error: 'Помилка сервера', message: error.message });
+    res.status(500).json({ error: 'Помилка сервера' });
   }
 });
 

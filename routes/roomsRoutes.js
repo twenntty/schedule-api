@@ -22,7 +22,7 @@ router.post("/", authMiddleware, async (req, res) => {
     await newRoom.save();
     res.status(201).json(newRoom);
   } catch (error) {
-    res.status(500).json({ message: "Помилка сервера", error: error.message });
+    res.status(500).json({ message: "Помилка сервера" });
   }
 });
 
@@ -35,7 +35,7 @@ router.get("/", authMiddleware, async (req, res) => {
     const rooms = await Room.find({ institution: req.user.institution });
     res.json(rooms);
   } catch (error) {
-    res.status(500).json({ message: "Помилка сервера", error: error.message });
+    res.status(500).json({ message: "Помилка сервера" });
   }
 });
 
@@ -53,7 +53,7 @@ router.delete("/:roomId", authMiddleware, async (req, res) => {
       await room.deleteOne();
       res.json({ message: "Кабінет видалено" });
     } catch (error) {
-      res.status(500).json({ message: "Помилка сервера", error: error.message });
+      res.status(500).json({ message: "Помилка сервера" });
     }
   });
   

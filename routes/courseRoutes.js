@@ -12,7 +12,7 @@ router.get("/", async (req, res) => {
         const courses = await Course.find();
         res.json(courses);
     } catch (error) {
-        res.status(500).json({ message: "Помилка сервера", error: error.message });
+        res.status(500).json({ message: "Помилка сервера" });
     }
 });
 
@@ -22,7 +22,7 @@ router.get("/:specialtyId", async (req, res) => {
         const courses = await Course.find({ specialty: req.params.specialtyId });
         res.json(courses);
     } catch (error) {
-        res.status(500).json({ message: "Помилка сервера", error: error.message });
+        res.status(500).json({ message: "Помилка сервера" });
     }
 });
 
@@ -34,7 +34,7 @@ router.post("/", canManage, async (req, res) => {
         await newCourse.save();
         res.status(201).json(newCourse);
     } catch (error) {
-        res.status(500).json({ message: "Помилка при створенні курсу", error: error.message });
+        res.status(500).json({ message: "Помилка при створенні курсу" });
     }
 });
 
@@ -46,7 +46,7 @@ router.delete("/:id", canManage, async (req, res) => {
         }
         res.status(200).json({ message: "Курс видалений" });
     } catch (error) {
-        res.status(500).json({ message: "Помилка при видалені курсу", error: error.message });
+        res.status(500).json({ message: "Помилка при видалені курсу" });
     }
 });
 

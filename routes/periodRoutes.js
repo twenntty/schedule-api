@@ -10,7 +10,7 @@ router.get('/', async (req, res) => {
         const periods = await Period.find();
         res.json(periods);
     } catch (error) {
-        res.status(500).json({ message: 'помилка загрузки', error: error.message });
+        res.status(500).json({ message: 'помилка загрузки' });
     }
 });
 
@@ -25,7 +25,7 @@ router.post('/', canManage, async (req, res) => {
         await newPeriod.save();
         res.json({ message: 'Тривалість додану', period: newPeriod });
     } catch (error) {
-        res.status(400).json({ message: 'Помилка при додавані тривалості', error: error.message });
+        res.status(400).json({ message: 'Помилка при додавані тривалості' });
     }
 });
 
@@ -39,7 +39,7 @@ router.delete('/:id', canManage, async (req, res) => {
         }
         res.json({ message: 'Період видалений', period: deletedPeriod });
     } catch (error) {
-        res.status(500).json({ message: 'Помилка при видаленні тривалості', error: error.message });
+        res.status(500).json({ message: 'Помилка при видаленні тривалості' });
     }
 });
 

@@ -30,7 +30,7 @@ router.get('/', async (req, res) => {
         const schedules = await Schedule.find().populate(populateFields);
         res.json(schedules);
     } catch (error) {
-        res.status(500).json({ message: "Помилка сервера", error: error.message });
+        res.status(500).json({ message: "Помилка сервера" });
     }
 });
 
@@ -41,7 +41,7 @@ router.get('/group/:groupId', async (req, res) => {
         const schedules = await Schedule.find({ group: groupId }).populate(populateFields);
         res.json(schedules);
     } catch (error) {
-        res.status(500).json({ message: "Помилка сервера", error: error.message });
+        res.status(500).json({ message: "Помилка сервера" });
     }
 });
 
@@ -95,7 +95,7 @@ router.get('/group/:groupId/export-week.ics', async (req, res) => {
 
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: 'Помилка генерації', error: err.message });
+    res.status(500).json({ message: 'Помилка генерації' });
   }
 });
 
@@ -106,7 +106,7 @@ router.get('/group/:groupId/day/:dayOfWeek', async (req, res) => {
         const schedules = await Schedule.find({ group: groupId, dayOfWeek }).populate(populateFields);
         res.json(schedules);
     } catch (error) {
-        res.status(500).json({ message: "Помилка сервера", error: error.message });
+        res.status(500).json({ message: "Помилка сервера" });
     }
 });
 
@@ -118,7 +118,7 @@ router.get('/teacher/:teacherId', async (req, res) => {
       
       res.json(schedules);
     } catch (error) {
-      res.status(500).json({ message: "Помилка сервера", error: error.message });
+      res.status(500).json({ message: "Помилка сервера" });
     }
   });
 
@@ -138,7 +138,7 @@ router.get('/teacher/:teacherId', async (req, res) => {
 
     res.json(schedules);
   } catch (error) {
-    res.status(500).json({ message: "Помилка сервера", error: error.message });
+    res.status(500).json({ message: "Помилка сервера" });
   }
 });
 
@@ -286,7 +286,7 @@ router.get('/group/:groupId/export-week.xlsx', async (req, res) => {
 
   } catch (err) {
     console.error('❌ Помилка генерації Excel:', err);
-    res.status(500).json({ message: 'Помилка генерації Excel', error: err.message });
+    res.status(500).json({ message: 'Помилка генерації Excel' });
   }
 });
 
@@ -329,11 +329,11 @@ router.post('/', canManage, async (req, res) => {
         res.json({ message: 'Запис доданий', schedule: newSchedule });
     } catch (error) {
         console.error("Помилка при добавлені пари:", {
-            message: error.message,
+            message: "Помилка сервера",
             stack: error.stack,
             body: req.body,
         });
-        res.status(500).json({ message: "Помилка серверу", error: error.message });
+        res.status(500).json({ message: "Помилка серверу" });
     }
 });
 
@@ -384,11 +384,11 @@ router.put('/:scheduleId', canManage, async (req, res) => {
         res.json({ message: "Пару оновлено", schedule: updatedSchedule });
     } catch (error) {
         console.error("Помилка при редагуванні пари:", {
-            message: error.message,
+            message: "Помилка сервера",
             stack: error.stack,
             body: req.body,
         });
-        res.status(500).json({ message: "Помилка серверу", error: error.message });
+        res.status(500).json({ message: "Помилка серверу" });
     }
 });
 
@@ -407,10 +407,10 @@ router.delete('/:scheduleId', canManage, async (req, res) => {
         res.json({ message: "Запис видалено" });
     } catch (error) {
         console.error("Помилка при видалені пари:", {
-            message: error.message,
+            message: "Помилка сервера",
             stack: error.stack,
         });
-        res.status(500).json({ message: "Помилка серверу", error: error.message });
+        res.status(500).json({ message: "Помилка серверу" });
     }
 });
 

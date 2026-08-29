@@ -20,7 +20,7 @@ router.get('/count', async (req, res) => {
     const count = await Group.countDocuments();
     res.json({ count });
   } catch (error) {
-    res.status(500).json({ message: 'Помилка сервера', error: error.message });
+    res.status(500).json({ message: 'Помилка сервера' });
   }
 });
 
@@ -30,18 +30,22 @@ router.get('/', async (req, res) => {
         const groups = await Group.find().populate('specialty').populate('course');
         res.json(groups);
     } catch (error) {
-        res.status(500).json({ message: 'Помилка при створенні групи', error: error.message });
+        res.status(500).json({ message: 'Помилка при створенні групи' });
     }
 });
 
 // Создать новую группу
 router.post('/', canManage, async (req, res) => {
     try {
-        const newGroup = new Group(req.body);
+        const { name, course, specialty } = req.body;
+        if (!name || !course || !specialty) {
+            return res.status(400).json({ message: 'Заповніть назву, курс і спеціальність' });
+        }
+        const newGroup = new Group({ name, course, specialty });
         await newGroup.save();
         res.json({ message: 'Групу створенно', group: newGroup });
     } catch (error) {
-        res.status(500).json({ message: 'Помилка при створенні групи', error: error.message });
+        res.status(500).json({ message: 'Помилка при створенні групи' });
     }
 });
 
@@ -55,7 +59,7 @@ router.delete('/:id', canManage, async (req, res) => {
         }
         res.json({ message: 'Групу видалено', group: deletedGroup });
     } catch (error) {
-        res.status(500).json({ message: 'Помилка пр видаленні пари', error: error.message });
+        res.status(500).json({ message: 'Помилка пр видаленні пари' });
     }
 });
 

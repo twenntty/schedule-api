@@ -8,7 +8,7 @@ router.get("/", requireRole("admin"), async (req, res) => {
         const users = await User.find({}, "firstName lastName position role");
         res.json(users);
     } catch (error) {
-        res.status(500).json({ message: "Помилка серверу", error: error.message });
+        res.status(500).json({ message: "Помилка серверу" });
     }
 });
 
