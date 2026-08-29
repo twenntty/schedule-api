@@ -1,5 +1,8 @@
 const express = require('express');
 const Group = require('../models/Group');
+const authMiddleware = require('../middleware/auth');
+const { requireRole } = authMiddleware;
+const canManage = [authMiddleware, requireRole('admin', 'institution')];
 const router = express.Router();
 
 
@@ -32,7 +35,7 @@ router.get('/', async (req, res) => {
 });
 
 // Создать новую группу
-router.post('/', async (req, res) => {
+router.post('/', canManage, async (req, res) => {
     try {
         const newGroup = new Group(req.body);
         await newGroup.save();
@@ -44,7 +47,7 @@ router.post('/', async (req, res) => {
 
 
 // Удалить группу по ID
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', canManage, async (req, res) => {
     try {
         const deletedGroup = await Group.findByIdAndDelete(req.params.id);
         if (!deletedGroup) {

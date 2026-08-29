@@ -20,10 +20,14 @@ const teacherRoutes = require('./routes/teacherRoutes');
 
 
 const app = express();
-app.use(express.json());
+app.use(express.json({ limit: "100kb" }));
+
+const cookieParser = require("cookie-parser");
+app.use(cookieParser());
 
 const cors = require("cors");
-app.use(cors());
+const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:3000";
+app.use(cors({ origin: FRONTEND_URL, credentials: true }));
 
 app.get("/specialties", async (req, res) => {
     const specialties = await Specialty.find();
@@ -75,7 +79,7 @@ app.use('/api/periods', authMiddleware, periodRoutes);
 app.use('/auth', authRoutes);
 app.use("/courses", courseRoutes);
 app.use('/api', weekdayRoute);
-app.use("/api/requests", authMiddleware, requestRoutes);
+app.use("/api/requests", requestRoutes);
 app.use('/teachers', teacherRoutes);
 
 connectDB();

@@ -1,8 +1,9 @@
 const express = require("express");
 const User = require("../models/User");
+const { requireRole } = require("../middleware/auth");
 const router = express.Router();
 
-router.get("/", async (req, res) => {
+router.get("/", requireRole("admin"), async (req, res) => {
     try {
         const users = await User.find({}, "firstName lastName position role");
         res.json(users);

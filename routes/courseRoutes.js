@@ -1,5 +1,8 @@
 const express = require("express");
 const Course = require("../models/Course"); // Импорт модели курса
+const authMiddleware = require("../middleware/auth");
+const { requireRole } = authMiddleware;
+const canManage = [authMiddleware, requireRole("admin", "institution")];
 
 const router = express.Router();
 
@@ -24,7 +27,7 @@ router.get("/:specialtyId", async (req, res) => {
 });
 
 // Создать курс
-router.post("/", async (req, res) => {
+router.post("/", canManage, async (req, res) => {
     try {
         const { name, specialty } = req.body;
         const newCourse = new Course({ name, specialty });
@@ -35,7 +38,7 @@ router.post("/", async (req, res) => {
     }
 });
 
-router.delete("/:id", async (req, res) => {
+router.delete("/:id", canManage, async (req, res) => {
     try {
         const result = await Course.findByIdAndDelete(req.params.id);
         if (!result) {

@@ -8,6 +8,9 @@ const Room = require('../models/Room');
 const Course = require('../models/Course');
 const Specialty = require('../models/Specialty');
 const router = express.Router();
+const authMiddleware = require('../middleware/auth');
+const { requireRole } = authMiddleware;
+const canManage = [authMiddleware, requireRole('admin', 'institution')];
 const ical = require('ical-generator').default;
 const moment = require('moment');
 const ExcelJS = require('exceljs');
@@ -289,7 +292,7 @@ router.get('/group/:groupId/export-week.xlsx', async (req, res) => {
 
 
 // ➜ Добавить новую запись в расписание
-router.post('/', async (req, res) => {
+router.post('/', canManage, async (req, res) => {
     try {
         const { subject, teacher, lessonType, period, group, room, dayOfWeek, date, course, specialty } = req.body;
 
@@ -335,7 +338,7 @@ router.post('/', async (req, res) => {
 });
 
 // ➜ Редактировать запись в расписании
-router.put('/:scheduleId', async (req, res) => {
+router.put('/:scheduleId', canManage, async (req, res) => {
     try {
         const { scheduleId } = req.params;
         const { subject, teacher, lessonType, period, group, room, dayOfWeek, date, course, specialty } = req.body;
@@ -390,7 +393,7 @@ router.put('/:scheduleId', async (req, res) => {
 });
 
 // ➜ Удалить запись из расписания
-router.delete('/:scheduleId', async (req, res) => {
+router.delete('/:scheduleId', canManage, async (req, res) => {
     try {
         const { scheduleId } = req.params;
 

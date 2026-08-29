@@ -1,5 +1,7 @@
 const express = require("express");
 const Request = require("../models/Request");
+const authMiddleware = require("../middleware/auth");
+const { requireRole } = authMiddleware;
 const router = express.Router();
 
 router.post("/add", async (req, res) => {
@@ -21,7 +23,7 @@ router.post("/add", async (req, res) => {
   }
 });
 
-router.get("/all", async (req, res) => {
+router.get("/all", authMiddleware, requireRole("admin"), async (req, res) => {
   try {
     const requests = await Request.find().sort({ createdAt: -1 });
     res.json(requests);

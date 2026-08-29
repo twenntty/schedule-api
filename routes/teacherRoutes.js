@@ -1,6 +1,9 @@
 const express = require('express');
 const Teacher = require('../models/Teacher');
 const Schedule = require('../models/Schedule');
+const authMiddleware = require('../middleware/auth');
+const { requireRole } = authMiddleware;
+const canManage = [authMiddleware, requireRole('admin', 'institution')];
 const router = express.Router();
 
 router.get('/', async (req, res) => {
@@ -12,7 +15,7 @@ router.get('/', async (req, res) => {
   }
 });
 
-router.post('/', async (req, res) => {
+router.post('/', canManage, async (req, res) => {
   try {
     const teacher = new Teacher(req.body);
     await teacher.save(); 
@@ -22,7 +25,7 @@ router.post('/', async (req, res) => {
   }
 });
 
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', canManage, async (req, res) => {
   try {
     const result = await Teacher.findByIdAndDelete(req.params.id);
     if (!result) {

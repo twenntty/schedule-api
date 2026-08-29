@@ -9,6 +9,14 @@ const generateToken = (user) => {
     return jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '30d' });
 };
 
+// httpOnly cookie so the token is never exposed to JavaScript (XSS-safe).
+const cookieOptions = {
+    httpOnly: true,
+    sameSite: 'lax',
+    secure: process.env.NODE_ENV === 'production',
+    maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+};
+
 router.post('/register', [
     check('firstName', 'Імʼя обовʼязково').notEmpty().trim().escape(),
     check('lastName', 'Прізвище обовʼязково').notEmpty().trim().escape(),
@@ -68,19 +76,15 @@ router.post('/register', [
         // Сохранение в базе данных
         await user.save();
 
-        // Генерация токена
-        const token = jwt.sign(
-            { id: user._id, role: user.role },
-            process.env.JWT_SECRET,
-            { expiresIn: '7d' }
-        );
+        // Генерация токена и установка httpOnly cookie
+        const token = generateToken(user);
+        res.cookie('token', token, cookieOptions);
 
         const userData = user.toObject();
         delete userData.password;
 
         res.status(201).json({
             message: 'Користувач зареєстрований',
-            token,
             user: userData
         });
 
@@ -112,15 +116,30 @@ router.post('/login', [
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) return res.status(400).json({ message: 'Неправильні дані облікового запису' });
 
-        res.json({ token: generateToken(user), user });
+        const token = generateToken(user);
+        res.cookie('token', token, cookieOptions);
+
+        const userData = user.toObject();
+        delete userData.password;
+        res.json({ user: userData });
     } catch (error) {
         res.status(500).json({ message: 'Помилка сервера' });
     }
 });
 
+// Выход — очистка cookie
+router.post('/logout', (req, res) => {
+    res.clearCookie('token', {
+        httpOnly: true,
+        sameSite: 'lax',
+        secure: process.env.NODE_ENV === 'production',
+    });
+    res.json({ message: 'Вихід виконано' });
+});
+
 // Проверка токена
 router.get('/me', async (req, res) => {
-    const token = req.header('Authorization')?.split(' ')[1];
+    const token = req.cookies?.token || req.header('Authorization')?.split(' ')[1];
     if (!token) return res.status(401).json({ message: 'Немає доступу' });
 
     try {

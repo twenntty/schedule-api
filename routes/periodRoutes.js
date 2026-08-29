@@ -1,5 +1,7 @@
 const express = require('express');
 const Period = require('../models/Period');
+const { requireRole } = require('../middleware/auth');
+const canManage = requireRole('admin', 'institution');
 const router = express.Router();
 
 // Получение всех периодов
@@ -13,7 +15,7 @@ router.get('/', async (req, res) => {
 });
 
 // Создание нового периода
-router.post('/', async (req, res) => {
+router.post('/', canManage, async (req, res) => {
     try {
         const { name, startTime, endTime } = req.body;
         if (!name || !startTime || !endTime) {
@@ -28,7 +30,7 @@ router.post('/', async (req, res) => {
 });
 
 // Удаление периода по ID
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', canManage, async (req, res) => {
     try {
         const { id } = req.params;
         const deletedPeriod = await Period.findByIdAndDelete(id);
