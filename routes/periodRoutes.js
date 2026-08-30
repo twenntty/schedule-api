@@ -7,7 +7,7 @@ const router = express.Router();
 // Получение всех периодов
 router.get('/', async (req, res) => {
     try {
-        const periods = await Period.find();
+        const periods = await Period.find({ institution: req.user.institution });
         res.json(periods);
     } catch (error) {
         res.status(500).json({ message: 'помилка загрузки' });
@@ -21,7 +21,7 @@ router.post('/', canManage, async (req, res) => {
         if (!name || !startTime || !endTime) {
             return res.status(400).json({ message: 'Заповніть поля' });
         }
-        const newPeriod = new Period({ name, startTime, endTime });
+        const newPeriod = new Period({ name, startTime, endTime, institution: req.user.institution });
         await newPeriod.save();
         res.json({ message: 'Тривалість додану', period: newPeriod });
     } catch (error) {
@@ -33,7 +33,7 @@ router.post('/', canManage, async (req, res) => {
 router.delete('/:id', canManage, async (req, res) => {
     try {
         const { id } = req.params;
-        const deletedPeriod = await Period.findByIdAndDelete(id);
+        const deletedPeriod = await Period.findOneAndDelete({ _id: id, institution: req.user.institution });
         if (!deletedPeriod) {
             return res.status(404).json({ message: 'Період не знайдено' });
         }

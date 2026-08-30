@@ -19,6 +19,20 @@ const authMiddleware = (req, res, next) => {
   }
 };
 
+// Optional auth: populate req.user if a valid token is present, never rejects.
+// Lets public read endpoints auto-scope to the logged-in institution.
+const softAuth = (req, res, next) => {
+  const token = req.cookies?.token || req.header("Authorization")?.split(" ")[1];
+  if (token) {
+    try { req.user = jwt.verify(token, process.env.JWT_SECRET); } catch (e) { /* ignore */ }
+  }
+  next();
+};
+
+// Resolve the institution scope for a request:
+// logged-in user's institution, else an explicit ?institution= for public reads.
+const scopeInstitution = (req) => req.user?.institution || req.query.institution || null;
+
 // Role gate: use after authMiddleware, e.g. requireRole("admin", "institution").
 const requireRole = (...roles) => (req, res, next) => {
   if (!req.user || !roles.includes(req.user.role)) {
@@ -29,3 +43,5 @@ const requireRole = (...roles) => (req, res, next) => {
 
 module.exports = authMiddleware;
 module.exports.requireRole = requireRole;
+module.exports.softAuth = softAuth;
+module.exports.scopeInstitution = scopeInstitution;

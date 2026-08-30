@@ -1,23 +1,15 @@
 const express = require('express');
 const Group = require('../models/Group');
 const authMiddleware = require('../middleware/auth');
-const { requireRole } = authMiddleware;
+const { requireRole, scopeInstitution } = authMiddleware;
 const canManage = [authMiddleware, requireRole('admin', 'institution')];
 const router = express.Router();
 
 
-const getGroupsCount = async (req, res) => {
-  try {
-    const count = await Group.countDocuments();
-    res.json({ count });
-  } catch (error) {
-    res.status(500).json({ error: 'Ошибка при подсчёте групп' });
-  }
-};
-
 router.get('/count', async (req, res) => {
   try {
-    const count = await Group.countDocuments();
+    const inst = scopeInstitution(req);
+    const count = await Group.countDocuments(inst ? { institution: inst } : {});
     res.json({ count });
   } catch (error) {
     res.status(500).json({ message: 'Помилка сервера' });
@@ -27,7 +19,8 @@ router.get('/count', async (req, res) => {
 // Получить все группы с курсом и специальностью
 router.get('/', async (req, res) => {
     try {
-        const groups = await Group.find().populate('specialty').populate('course');
+        const inst = scopeInstitution(req);
+        const groups = await Group.find(inst ? { institution: inst } : {}).populate('specialty').populate('course');
         res.json(groups);
     } catch (error) {
         res.status(500).json({ message: 'Помилка при створенні групи' });
@@ -41,7 +34,7 @@ router.post('/', canManage, async (req, res) => {
         if (!name || !course || !specialty) {
             return res.status(400).json({ message: 'Заповніть назву, курс і спеціальність' });
         }
-        const newGroup = new Group({ name, course, specialty });
+        const newGroup = new Group({ name, course, specialty, institution: req.user.institution });
         await newGroup.save();
         res.json({ message: 'Групу створенно', group: newGroup });
     } catch (error) {
@@ -53,7 +46,7 @@ router.post('/', canManage, async (req, res) => {
 // Удалить группу по ID
 router.delete('/:id', canManage, async (req, res) => {
     try {
-        const deletedGroup = await Group.findByIdAndDelete(req.params.id);
+        const deletedGroup = await Group.findOneAndDelete({ _id: req.params.id, institution: req.user.institution });
         if (!deletedGroup) {
             return res.status(404).json({ message: 'Групу не знайдено' });
         }

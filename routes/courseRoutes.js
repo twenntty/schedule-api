@@ -1,7 +1,7 @@
 const express = require("express");
 const Course = require("../models/Course"); // Импорт модели курса
 const authMiddleware = require("../middleware/auth");
-const { requireRole } = authMiddleware;
+const { requireRole, scopeInstitution } = authMiddleware;
 const canManage = [authMiddleware, requireRole("admin", "institution")];
 
 const router = express.Router();
@@ -9,7 +9,8 @@ const router = express.Router();
 // Получить все курсы
 router.get("/", async (req, res) => {
     try {
-        const courses = await Course.find();
+        const inst = scopeInstitution(req);
+        const courses = await Course.find(inst ? { institution: inst } : {});
         res.json(courses);
     } catch (error) {
         res.status(500).json({ message: "Помилка сервера" });
@@ -19,7 +20,10 @@ router.get("/", async (req, res) => {
 // Получить курсы по ID специальности
 router.get("/:specialtyId", async (req, res) => {
     try {
-        const courses = await Course.find({ specialty: req.params.specialtyId });
+        const filter = { specialty: req.params.specialtyId };
+        const inst = scopeInstitution(req);
+        if (inst) filter.institution = inst;
+        const courses = await Course.find(filter);
         res.json(courses);
     } catch (error) {
         res.status(500).json({ message: "Помилка сервера" });
@@ -30,7 +34,8 @@ router.get("/:specialtyId", async (req, res) => {
 router.post("/", canManage, async (req, res) => {
     try {
         const { name, specialty } = req.body;
-        const newCourse = new Course({ name, specialty });
+        if (!name || !specialty) return res.status(400).json({ message: "Вкажіть назву і спеціальність" });
+        const newCourse = new Course({ name, specialty, institution: req.user.institution });
         await newCourse.save();
         res.status(201).json(newCourse);
     } catch (error) {
@@ -40,7 +45,7 @@ router.post("/", canManage, async (req, res) => {
 
 router.delete("/:id", canManage, async (req, res) => {
     try {
-        const result = await Course.findByIdAndDelete(req.params.id);
+        const result = await Course.findOneAndDelete({ _id: req.params.id, institution: req.user.institution });
         if (!result) {
             return res.status(404).json({ message: "Курс не знайдено" });
         }

@@ -2,6 +2,7 @@ const mongoose = require("mongoose");
 
 const RoomSchema = new mongoose.Schema({
   name: { type: String, required: true },
+  institution: { type: mongoose.Schema.Types.ObjectId, ref: "Institution", required: true, index: true },
 });
 
 RoomSchema.pre("save", function (next) {

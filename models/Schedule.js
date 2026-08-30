@@ -14,7 +14,8 @@ const scheduleSchema = new mongoose.Schema({
     dayOfWeek: { type: Number, required: true },
     date: { type: Date, required: true }, 
     specialty: { type: mongoose.Schema.Types.ObjectId, ref: 'Specialty', required: true },
-    course: { type: mongoose.Schema.Types.ObjectId, ref: 'Course', required: true } 
+    course: { type: mongoose.Schema.Types.ObjectId, ref: 'Course', required: true },
+    institution: { type: mongoose.Schema.Types.ObjectId, ref: 'Institution', required: true, index: true }
 });
 
 module.exports = mongoose.model('Schedule', scheduleSchema);

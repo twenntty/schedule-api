@@ -14,28 +14,42 @@ const userSchema = new mongoose.Schema({
         type: String, 
         required: false 
     },
-    position: { 
-        type: String, 
-        required: [true, "Посада обов'язкова для заповнення"] 
+    position: {
+        type: String,
+        required: false
     },
     educationalInstitution: {
         type: String,
-        required: [true, "Навчальний заклад обов'язковий для заповнення"]
+        required: false
     },
     phoneNumber: {
         type: String,
-        required: [true, "Номер телефону обов'язковий"],
+        required: false,
         unique: true,
+        sparse: true,
         validate: {
             validator: function(v) {
-                return /^\+?[1-9]\d{1,14}$/.test(v);
+                return !v || /^\+?[1-9]\d{1,14}$/.test(v);
             },
             message: props => `${props.value} не є валідним номером телефону!`
         }
     },
-    email: { 
-        type: String, 
-        required: [true, "Електронна пошта обов'язкова"], 
+    // Every user (except platform admins) belongs to one institution.
+    institution: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Institution',
+        index: true,
+    },
+    // Auto-generated teacher accounts sign in with this handle (e.g. Arshava@kievuniversity.sched.go).
+    login: {
+        type: String,
+        unique: true,
+        sparse: true,
+        index: true,
+    },
+    email: {
+        type: String,
+        required: [true, "Електронна пошта обов'язкова"],
         unique: true,
         validate: {
             validator: function(v) {

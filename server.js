@@ -34,6 +34,11 @@ app.use(express.json({ limit: "100kb" }));
 const cookieParser = require("cookie-parser");
 app.use(cookieParser());
 
+// Populate req.user from the cookie when present (never rejects) so public
+// read endpoints can auto-scope to the logged-in institution.
+const { softAuth, scopeInstitution } = authMiddleware;
+app.use(softAuth);
+
 const cors = require("cors");
 const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:3000";
 app.use(cors({ origin: FRONTEND_URL, credentials: true }));
@@ -55,24 +60,16 @@ const authLimiter = rateLimit({
 app.use("/auth/login", authLimiter);
 app.use("/auth/register", authLimiter);
 
-app.get("/specialties", async (req, res) => {
-    const specialties = await Specialty.find();
-    res.json(specialties);
-});
-
-app.get("/courses/:specialtyId", async (req, res) => {
-    try {
-        const courses = await Course.find({ specialty: req.params.specialtyId });
-        res.json(courses);
-    } catch (error) {
-        res.status(500).json({ message: "Помилка сервера" });
-    }
-});
+// NOTE: /specialties and /courses/:specialtyId are served by their routers
+// (specialtyRoutes / courseRoutes); the inline duplicates were removed.
 
 app.get("/groups/:courseId", async (req, res) => {
     try {
-        const courseId = new mongoose.Types.ObjectId(req.params.courseId); 
-        const groups = await Group.find({ course: courseId }).populate("specialty course");
+        const courseId = new mongoose.Types.ObjectId(req.params.courseId);
+        const filter = { course: courseId };
+        const inst = scopeInstitution(req);
+        if (inst) filter.institution = inst;
+        const groups = await Group.find(filter).populate("specialty course");
         res.json(groups);
     } catch (error) {
         res.status(500).json({ message: "Помилка сервера" });
@@ -107,6 +104,8 @@ app.use("/courses", courseRoutes);
 app.use('/api', weekdayRoute);
 app.use("/api/requests", requestRoutes);
 app.use('/teachers', teacherRoutes);
+app.use('/institutions', require('./routes/institutionRoutes'));
+app.use('/disciplines', require('./routes/disciplineRoutes'));
 
 // Health probe — reports DB connectivity without leaking details.
 app.get("/health", (req, res) => {

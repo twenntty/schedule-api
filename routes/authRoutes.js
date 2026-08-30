@@ -3,7 +3,12 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { check, validationResult } = require('express-validator');
 const User = require('../models/User');
+const Institution = require('../models/Institution');
+const authMiddleware = require('../middleware/auth');
+const { requireRole } = authMiddleware;
 const router = express.Router();
+
+const { slugify } = require('../utils/translit');
 
 const crypto = require('crypto');
 const RefreshToken = require('../models/RefreshToken');
@@ -21,7 +26,7 @@ const baseCookie = {
 
 // One shared signer for the short-lived access token.
 const signAccess = (user) =>
-    jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: ACCESS_TTL });
+    jwt.sign({ id: user._id, role: user.role, institution: user.institution }, process.env.JWT_SECRET, { expiresIn: ACCESS_TTL });
 
 // Issue a short access cookie + a rotating refresh token stored server-side.
 const issueTokens = async (res, user) => {
@@ -41,7 +46,57 @@ const clearAuthCookies = (res) => {
     res.clearCookie('refreshToken', { ...baseCookie, path: '/auth' });
 };
 
-router.post('/register', [
+// Публичная регистрация НАВЧАЛЬНОГО ЗАКЛАДУ + первого представника
+router.post('/register-institution', [
+    check('institutionName', 'Назва закладу обовʼязкова').notEmpty().trim(),
+    check('firstName', 'Імʼя обовʼязково').notEmpty().trim().escape(),
+    check('lastName', 'Прізвище обовʼязково').notEmpty().trim().escape(),
+    check('email', 'Введіть правильний Email').isEmail().normalizeEmail(),
+    check('password', 'Пароль повинен бути не меньше 6 символів.').isLength({ min: 6 }),
+    check('timezone', 'Оберіть часовий пояс').optional().isString(),
+], async (req, res, next) => {
+    try {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
+
+        const { institutionName, timezone, firstName, lastName, patronymic, position, phoneNumber, email, password } = req.body;
+
+        if (await User.findOne({ email })) {
+            return res.status(409).json({ message: 'Email вже зареєстрований в системі.' });
+        }
+
+        // Unique slug from the institution name.
+        const base = slugify(institutionName);
+        let slug = base, n = 1;
+        while (await Institution.findOne({ slug })) slug = `${base}${++n}`;
+
+        const institution = await Institution.create({
+            name: institutionName,
+            slug,
+            timezone: timezone || 'Europe/Kyiv',
+            registrationToken: crypto.randomBytes(16).toString('hex'),
+        });
+
+        const user = new User({
+            firstName, lastName, patronymic,
+            position: position || 'Представник закладу',
+            educationalInstitution: institutionName,
+            phoneNumber, email, password,
+            role: 'institution',
+            institution: institution._id,
+        });
+        await user.save();
+
+        await issueTokens(res, user);
+        const userData = user.toObject();
+        delete userData.password;
+        res.status(201).json({ message: 'Заклад зареєстровано', user: userData, institution });
+    } catch (error) {
+        next(error);
+    }
+});
+
+router.post('/register', authMiddleware, requireRole('institution', 'admin'), [
     check('firstName', 'Імʼя обовʼязково').notEmpty().trim().escape(),
     check('lastName', 'Прізвище обовʼязково').notEmpty().trim().escape(),
     check('patronymic', 'По-батькові обовʼязково').optional().trim().escape(),
@@ -94,7 +149,8 @@ router.post('/register', [
             phoneNumber,
             email,
             password,
-            role
+            role,
+            institution: req.user.institution, // scoped to the representative's institution
         });
 
         // Сохранение в базе данных

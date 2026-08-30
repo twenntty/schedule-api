@@ -9,7 +9,7 @@ const Course = require('../models/Course');
 const Specialty = require('../models/Specialty');
 const router = express.Router();
 const authMiddleware = require('../middleware/auth');
-const { requireRole } = authMiddleware;
+const { requireRole, scopeInstitution } = authMiddleware;
 const canManage = [authMiddleware, requireRole('admin', 'institution')];
 const ical = require('ical-generator').default;
 const moment = require('moment');
@@ -27,7 +27,10 @@ const populateFields = [
 // ➜ Получить ВСЁ расписание
 router.get('/', async (req, res) => {
     try {
-        const schedules = await Schedule.find().populate(populateFields);
+        const inst = scopeInstitution(req);
+        const limit = Math.min(parseInt(req.query.limit) || 500, 1000);
+        const skip = parseInt(req.query.skip) || 0;
+        const schedules = await Schedule.find(inst ? { institution: inst } : {}).skip(skip).limit(limit).populate(populateFields);
         res.json(schedules);
     } catch (error) {
         res.status(500).json({ message: "Помилка сервера" });
@@ -323,7 +326,7 @@ router.post('/', canManage, async (req, res) => {
             return res.status(400).json({ message: "Один або декілька документів не знайдено" });
         }
 
-        const newSchedule = new Schedule({ subject, teacher, lessonType, period, group, room, dayOfWeek, date, course, specialty });
+        const newSchedule = new Schedule({ subject, teacher, lessonType, period, group, room, dayOfWeek, date, course, specialty, institution: req.user.institution });
 
         await newSchedule.save();
         res.json({ message: 'Запис доданий', schedule: newSchedule });
@@ -398,7 +401,7 @@ router.delete('/:scheduleId', canManage, async (req, res) => {
         const { scheduleId } = req.params;
 
         // Удаляем расписание
-        const deletedSchedule = await Schedule.findByIdAndDelete(scheduleId);
+        const deletedSchedule = await Schedule.findOneAndDelete({ _id: scheduleId, institution: req.user.institution });
 
         if (!deletedSchedule) {
             return res.status(404).json({ message: "Запис розкалду не знайдено" });
